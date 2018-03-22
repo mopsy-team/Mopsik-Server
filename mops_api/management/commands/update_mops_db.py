@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
-from django.conf import settings
-from django.core.management.base import BaseCommand
-from mops_api.models import MOP, Operator
-import os
-import urllib.request
 import filecmp
+import os
+import random
+import urllib.request
+
+from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 
+from mops_api.models import MOP, Operator
+
 mops_api_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-#XLSX_URL = 'https://www.mimuw.edu.pl/~pawelg/RID/MOPy/MOP%202016-08-02.xlsx'
-XLSX_URL = 'https://students.mimuw.edu.pl/~pp371308/zpp/mopsik/mopy.xlsx'
+XLSX_URL = 'https://www.mimuw.edu.pl/~pawelg/RID/MOPy/MOP%202016-08-02.xlsx'
+# XLSX_URL = 'https://students.mimuw.edu.pl/~pp371308/zpp/mopsik/mopy.xlsx'
 NEW_XLSX_LOCATION = mops_api_dir + '/data/mopy_new.xlsx'
 OLD_XLSX_LOCATION = mops_api_dir + '/data/mopy_old.xlsx'
 LOCAL_CSV_LOCATION = ''
@@ -23,10 +25,12 @@ def get_boolean(x):
     elif 'nie' in x:
         return 0
     else:
-        raise ValueError("WRONG BOOLEAN")
+        print("Wrong Boolean")
+        return 0
+        # raise ValueError("WRONG BOOLEAN")
 
 
-def get_mop_type(x):
+def get_mop_type(nr, x):
     x = str(x)
     if 'III' in x:
         return 3
@@ -35,20 +39,14 @@ def get_mop_type(x):
     elif 'I' in x:
         return 1
     else:
+        print("Wrong MOP type in line " + str(nr))
         return 1
-        #    raise ValueError("WRONG MOP TYPE")
 
 
-# def get_mop_name(x):
-#     x = str(x)
-#     mop_type_length = get_mop_type(x)
-#     # In given Excel we have format "MOP mop_type name"
-#     if len(x) < 4 + mop_type_length:
-#         raise ValueError
-#     elif len(x) == 4 + mop_type_length:
-#         return ''
-#     else:
-#         return x[5 + mop_type_length:]
+def randomize_free_places(mop):
+    mop.taken_bus_dedicated_places = random.randint(0, mop.bus_dedicated_places)
+    mop.taken_truck_places = random.randint(0, mop.truck_places)
+    mop.taken_passenger_places = random.randint(0, mop.passenger_places)
 
 
 def download_new_file():
@@ -56,47 +54,58 @@ def download_new_file():
 
 
 def create_operator(attr):
-    if not 'operator_name' in attr.keys():
+    if not 'name' in attr.keys() or attr['permission'] == 'nie':
         return Operator(name='-')
-    operator, _ = Operator.objects.get_or_create(name=attr['operator_name'])
+    operator, _ = Operator.objects.get_or_create(name=attr['name'])
     for (key, value) in attr.items():
-        if key != 'operator_name' and value is not None:
+        if key != 'name' and value is not None:
             setattr(operator, key, value)
-    print(operator)
     operator.save()
     return operator
 
 
 def create_mop(attr, _operator):
-    mop, created = MOP.objects.get_or_create(x=attr['x'], y=attr['y'], operator=_operator)
-    for (key, value) in attr.items():
-        if value is not None:
-            setattr(mop, key, value)
-    print(mop)
-    mop.save()
-    return mop
+    if attr['title'] is not None and attr['x'] is not None and attr['y'] is not None:
+        mop, created = MOP.objects.get_or_create(x=attr['x'], y=attr['y'], title=attr['title'], operator=_operator)
+        for (key, value) in attr.items():
+            if value is not None:
+                setattr(mop, key, value)
+        randomize_free_places(mop)
+        mop.save()
+        return mop
 
 
 def parse_phone_number(x):
     if x is None or x == '-':
         return '-'
-    x = str(x).replace(' ', '')
-    x = str(int(x))
-    print(x)
-    assert len(x) == 9
-    return x
+    x = str(x)
+    ret = ''
+    counter = 0
+    for c in x:
+        if not c.isspace():
+            counter += 1
+            ret += c
+        if counter == 9:
+            break
+    return ret
 
 
 def parse_email(x):
     if x is None or x == '-':
         return '-'
-    return x
+    return x.strip()
+
+
+def parse_name(x):
+    if x is None or x == '-':
+        return '-'
+    return x.strip()
 
 
 class Command(BaseCommand):
     def parse(self):
         wb = load_workbook(filename=NEW_XLSX_LOCATION, data_only=True)
-        ws = wb.get_active_sheet()
+        ws = wb.active
         for row in ws.iter_rows():
             if row[1].value is not None:
 
@@ -109,26 +118,22 @@ class Command(BaseCommand):
                 except:
                     continue
 
-                print(row)
                 try:
                     it += 1
                     mop_attr['department'] = row[it].value
                     it += 1
-                    print('lol')
                     mop_attr['town'] = str(row[it].value)
                     it += 1
-                    mop_attr['type'] = get_mop_type(row[it].value)
-                    mop_attr['name'] = row[it].value
+                    mop_attr['type'] = get_mop_type(mop_attr['number_in_excel'], row[it].value)
+                    mop_attr['title'] = row[it].value
 
                     it += 1
                     mop_attr['x_92'] = row[it].value
                     it += 1
                     mop_attr['y_92'] = row[it].value
                     it += 1
-                    print(row[it].value)
                     mop_attr['x'] = row[it].value
                     it += 1
-                    print(row[it].value)
                     mop_attr['y'] = row[it].value
 
                     it += 1
@@ -136,8 +141,8 @@ class Command(BaseCommand):
                     it += 1
                     mop_attr['road_number'] = row[it].value
 
-                    # chainage
                     it += 1
+                    mop_attr['chainage'] = row[it].value
 
                     it += 1
                     mop_attr['direction'] = row[it].value
@@ -176,18 +181,17 @@ class Command(BaseCommand):
                     mop_attr['garage'] = get_boolean(row[it].value)
 
                     it += 1
+                    operator_attr['name'] = parse_name(row[it].value)
+                    it += 1
+                    operator_attr['phone'] = parse_phone_number(row[it].value)
+                    it += 1
+                    operator_attr['email'] = parse_email(row[it].value)
+                    it += 1
+                    operator_attr['permission'] = get_boolean(row[it].value)
 
-                    if row[it].value != '-' and row[it].value is not None:
-                        operator_attr['operator_name'] = row[it].value
-                        it += 1
-                        operator_attr['phone'] = parse_phone_number(row[it].value)
-                        it += 1
-                        operator_attr['email'] = parse_email(row[it].value)
-                        it += 1
-                        operator_attr['permission'] = get_boolean(row[it].value)
                 except ValueError as e:
                     print(e)
-                    print('lol')
+                    print(mop_attr['number_in_excel'])
                     return False
 
                 operator = create_operator(operator_attr)
@@ -198,10 +202,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         download_new_file()
-        # if filecmp.cmp(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION):
-        #    os.remove(NEW_XLSX_LOCATION)
-        # else:
-        if self.parse():
-            os.rename(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION)
+        if filecmp.cmp(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION):
+            os.remove(NEW_XLSX_LOCATION)
         else:
-            print("Incorrect file on server")
+            if self.parse():
+                os.rename(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION)
+            else:
+                print("Incorrect file on server")

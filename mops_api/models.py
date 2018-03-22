@@ -33,7 +33,7 @@ class MOP(models.Model):
     department = models.CharField(max_length=MAX_STRING_LENGTH, default='')
     town = models.CharField(max_length=MAX_STRING_LENGTH, default='')
     type = models.CharField(max_length=3, choices=MOP_TYPE_CHOICES, default='1')
-    name = models.CharField(max_length=MAX_STRING_LENGTH, default='')
+    title = models.CharField(max_length=MAX_STRING_LENGTH, default='')
     # system wgs84
     x = models.FloatField(default=0)
     y = models.FloatField(default=0)
@@ -46,11 +46,11 @@ class MOP(models.Model):
     operator = models.ForeignKey('Operator', on_delete=None)
 
     passenger_places = models.IntegerField(default=0)
-    free_passenger_places = models.IntegerField(default=0)
+    taken_passenger_places = models.IntegerField(default=0)
     truck_places = models.IntegerField(default=0)
-    free_truck_places = models.IntegerField(default=0)
+    taken_truck_places = models.IntegerField(default=0)
     bus_dedicated_places = models.IntegerField(default=0)
-    free_bus_dedicated_places = models.IntegerField(default=0)
+    taken_bus_dedicated_places = models.IntegerField(default=0)
 
     security = models.BooleanField(default=False)
     fence = models.BooleanField(default=False)
@@ -64,12 +64,12 @@ class MOP(models.Model):
     car_wash = models.BooleanField(default=False)
     garage = models.BooleanField(default=False)
 
+    chainage = models.CharField(max_length=MAX_STRING_LENGTH, default='')
     # not included from excel provided by GDDKiA:
     # turnoff - zjazd
-    # chainage - pikietaż
 
     def __str__(self):
-        return self.name
+        return self.title
 
     class Meta:
-        unique_together = ('x', 'y', 'name')
+        unique_together = ('x', 'y', 'title', 'town')
