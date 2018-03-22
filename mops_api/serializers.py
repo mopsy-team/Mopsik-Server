@@ -6,8 +6,8 @@ class CoordinateField(serializers.Field):
 
     def to_representation(self, obj):
         ret = {
-            "x": obj.x,
-            "y": obj.y
+            "latitude": obj.x,
+            "longitude": obj.y
         }
         return ret
 
