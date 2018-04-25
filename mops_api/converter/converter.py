@@ -80,6 +80,8 @@ def wgs84_to_puwg92(B_stopnie, L_stopnie):
 
 
 def puwg92_do_wgs84(Xpuwg, Ypuwg):
+    Xpuwg = float(Xpuwg)
+    Ypuwg = float(Ypuwg)
     L0_stopnie = 19.0
     m0 = 0.9993
 

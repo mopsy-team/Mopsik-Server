@@ -69,7 +69,7 @@ class MOP(models.Model):
     # turnoff - zjazd
 
     def __str__(self):
-        return self.title
+        return str(self.number_in_excel) + " " + self.title
 
     class Meta:
-        unique_together = ('x', 'y', 'title', 'town')
+        unique_together = ('x', 'y', 'title', 'town', 'chainage')
