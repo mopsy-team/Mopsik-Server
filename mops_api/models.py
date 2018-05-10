@@ -72,4 +72,4 @@ class MOP(models.Model):
         return str(self.number_in_excel) + " " + self.title
 
     class Meta:
-        unique_together = ('x', 'y', 'title', 'town', 'chainage')
+        unique_together = ('x', 'y', 'title', 'town', 'chainage', 'direction')
