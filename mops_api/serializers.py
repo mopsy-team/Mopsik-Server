@@ -32,6 +32,7 @@ class FacilitiesField(serializers.Field):
 
 class TakenField(serializers.Field):
 
+
     def to_representation(self, obj):
         ret = {
             "bus": obj.taken_bus_dedicated_places,
@@ -72,4 +73,4 @@ class TakenSerializer(serializers.HyperlinkedModelSerializer):
     taken = TakenField(source='*')
     class Meta:
         model = MOP
-        fields = ['taken']
+        fields = ['id', 'taken']
