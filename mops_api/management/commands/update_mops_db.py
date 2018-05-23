@@ -19,7 +19,7 @@ OLD_XLSX_LOCATION = mops_api_dir + '/data/mopy_old.xlsx'
 LOCAL_CSV_LOCATION = ''
 
 
-def type(nr, x):
+def type(x):
     x = str(x)
     if 'III' in x:
         return 3
@@ -28,8 +28,7 @@ def type(nr, x):
     elif 'I' in x:
         return 1
     else:
-        print("Wrong MOP type in line " + str(nr))
-        return 1
+        return 0
 
 
 def randomize_free_places(mop):
@@ -109,6 +108,7 @@ mop_columns = {
     'department': ('C', str),
     'town': ('D', str),
     'title': ('E', str),
+    'type': ('E', type),
     'x92': ('F', str),
     'y92': ('G', str),
     'road_technical_class': ('H', str),
@@ -181,14 +181,16 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         d = datetime.date.today()
         month_and_year = d.strftime('%m') + '.' + str(d.year)
-        XLSX_URL = 'https://www.gddkia.gov.pl/frontend/web/userfiles/articles/p/pliki-z-danymi-o-utrudnieniach_4395/MOP%20'
-        XLSX_URL += month_and_year + '%20final.xlsx'
+        #XLSX_URL = 'https://www.gddkia.gov.pl/frontend/web/userfiles/articles/p/pliki-z-danymi-o-utrudnieniach_4395/MOP%20'
+        #XLSX_URL += month_and_year + '%20final.xlsx'
+
+        XLSX_URL = 'https://www.gddkia.gov.pl/frontend/web/userfiles/articles/p/pliki-z-danymi-o-utrudnieniach_4395/MOP%2011.2017%20final.xlsx'
 
         if download_new_file(XLSX_URL):
-            if filecmp.cmp(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION):
-                print('Plik identyczny z plikiem z poprzedniego miesiąca')
-                os.remove(NEW_XLSX_LOCATION)
-            else:
+           # if filecmp.cmp(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION):
+            #    print('Plik identyczny z plikiem z poprzedniego miesiąca')
+            #    os.remove(NEW_XLSX_LOCATION)
+           # else:
                 if self.parse():
                     os.rename(NEW_XLSX_LOCATION, OLD_XLSX_LOCATION)
                 else:

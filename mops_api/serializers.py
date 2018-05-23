@@ -66,7 +66,8 @@ class MOPSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = MOP
         fields = ['id', 'title', 'coords', 'available', 'taken', 'facilities',
-                  'chainage', 'direction', 'road_number', 'town', 'operator']
+                  'chainage', 'direction', 'road_number', 'town', 'operator',
+                  'department', 'type']
 
 
 class TakenSerializer(serializers.HyperlinkedModelSerializer):
