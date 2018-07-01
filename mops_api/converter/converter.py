@@ -79,7 +79,7 @@ def wgs84_to_puwg92(B_stopnie, L_stopnie):
     return 0, Xpuwg, Ypuwg
 
 
-def puwg92_do_wgs84(Xpuwg, Ypuwg):
+def puwg92_to_wgs84(Xpuwg, Ypuwg):
     Xpuwg = float(Xpuwg)
     Ypuwg = float(Ypuwg)
     L0_stopnie = 19.0
