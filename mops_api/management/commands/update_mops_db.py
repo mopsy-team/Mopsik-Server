@@ -10,7 +10,7 @@ from django.core.management.base import BaseCommand
 from openpyxl import load_workbook
 from openpyxl.utils import column_index_from_string
 
-from mops_api.converter.converter import puwg92_do_wgs84
+from mops_api.converter.converter import puwg92_to_wgs84
 from mops_api.models import MOP, Operator
 
 mops_api_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -167,7 +167,7 @@ class Command(BaseCommand):
                     col = column_index_from_string(_col) - 1
                     operator_attr[_key] = parse_field(row[col].value, _type, lp)
 
-                mop_attr['x'], mop_attr['y'] = puwg92_do_wgs84(mop_attr['x92'], mop_attr['y92'])
+                mop_attr['x'], mop_attr['y'] = puwg92_to_wgs84(mop_attr['x92'], mop_attr['y92'])
 
                 try:
                     operator = create_operator(operator_attr)
