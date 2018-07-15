@@ -10,7 +10,7 @@ router.register(r'taken', views.TakenViewSet, base_name='taken')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
-    url(r'wsg_to_92', views.wgs_to_puwg92),
-    url(r'92_to_wsg', views.puwg92_to_wgs),
+    url(r'wgs_to_92', views.wgs_to_puwg92),
+    url(r'92_to_wgs', views.puwg92_to_wgs),
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
