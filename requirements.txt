@@ -6,3 +6,4 @@ pip==9.0.2
 pytz==2017.3
 setuptools==39.0.1
 wheel==0.30.0
+djangorestframework==3.7.7
